@@ -1,0 +1,32 @@
+09-10-2026 00:57:50 | admin | Signed in to the admin portal
+09-10-2026 00:58:56 | PAT-1001 | Signed in to the patient portal
+09-10-2026 01:15:42 | admin | Signed in to the admin portal
+09-10-2026 01:16:46 | admin | Registered patient PAT-1007 (Abc xyz)
+09-10-2026 01:17:21 | admin | Signed out
+09-10-2026 01:17:43 | PAT-1007 | Signed in to the patient portal
+09-10-2026 01:18:01 | PAT-1007 | Signed out
+09-10-2026 01:18:28 | admin | Signed in to the admin portal
+09-10-2026 01:18:49 | admin | Signed in to the admin portal
+09-10-2026 01:19:04 | admin | Signed in to the admin portal
+09-10-2026 01:20:52 | admin | Registered patient PAT-1008 (test123)
+09-10-2026 01:21:11 | admin | Signed out
+09-10-2026 01:21:21 | PAT-1008 | Signed in to the patient portal
+09-10-2026 07:39:36 | admin | Signed in to the admin portal
+09-10-2026 07:43:55 | admin | Signed in to the admin portal
+09-10-2026 07:50:19 | admin | Signed in to the admin portal
+09-10-2026 07:54:05 | admin | Signed in to the admin portal
+09-10-2026 07:56:07 | admin | Registered patient PAT-1009 (Peter)
+09-10-2026 07:56:49 | PAT-1008 | Signed in to the patient portal
+09-10-2026 07:57:17 | PAT-1009 | Signed in to the patient portal
+09-10-2026 07:57:47 | admin | Signed in to the admin portal
+09-10-2026 07:59:12 | admin | Raised bill #8 of Rs. 56,000.00 for PAT-1009
+09-10-2026 07:59:54 | PAT-1009 | Signed in to the patient portal
+09-10-2026 08:00:02 | PAT-1009 | Bill #8 settled, receipt saved as receipt_PAT-1009_bill8.txt
+09-10-2026 08:00:46 | admin | Signed in to the admin portal
+09-10-2026 08:01:10 | admin | Signed in to the admin portal
+09-10-2026 08:02:07 | admin | Registered patient PAT-1010 (Dhananjay)
+09-10-2026 08:02:56 | PAT-1009 | Signed in to the patient portal
+09-10-2026 08:03:24 | PAT-1010 | Signed in to the patient portal
+09-10-2026 08:04:31 | admin | Signed in to the admin portal
+09-10-2026 08:05:19 | admin | Registered patient PAT-1011 (swara)
+09-10-2026 08:06:02 | PAT-1011 | Signed in to the patient portal

@@ -1,0 +1,27 @@
+======================================================
+                        MKURE                         
+                        Mumbai                        
+                  Phone: 8433552656                   
+======================================================
+                   PAYMENT RECEIPT                    
+------------------------------------------------------
+  Receipt No.                             RCPT-00008
+  Patient ID                                PAT-1009
+  Patient Name                                 Peter
+  Phone                                   1234568790
+  Attending Doctor                    Dr. Arjun Nair
+  Bill Date                              09 Oct 2026
+  Paid On                                09 Oct 2026
+------------------------------------------------------
+  Treatment: Brain stroke
+------------------------------------------------------
+  Treatment Cost                       Rs. 50,000.00
+  Consultation Fee                      Rs. 2,000.00
+  Medicine Charges                      Rs. 2,000.00
+  Room Charges                          Rs. 2,000.00
+------------------------------------------------------
+  TOTAL PAID                           Rs. 56,000.00
+======================================================
+      Thank you for choosing us. Get well soon.       
+           Generated on 09-10-2026 08:00:02           
+======================================================
