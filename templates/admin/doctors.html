@@ -1,0 +1,62 @@
+{% extends "admin/layout.html" %}
+{% block title %}Doctors{% endblock %}
+{% block heading %}Doctors{% endblock %}
+{% block actions %}
+<button type="button" class="btn btn-primary" data-open="add-doctor-modal">{{ icon('plus', 16) }} Add doctor</button>
+{% endblock %}
+{% block content %}
+<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+    {% for d in doctors %}
+    <article class="card">
+        <div class="card-head" style="align-items: flex-start; padding-bottom: 0; border: none;">
+            <div class="person">
+                <span class="avatar c{{ d.name|length % 6 }}">{{ d.name|initials }}</span>
+                <div>
+                    <h3>{{ d.name }}</h3>
+                    <div class="muted">{{ d.specialization }}</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 20px;">
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <div style="display: flex; gap: 8px; align-items: center;" class="muted">
+                    {{ icon('phone', 16) }} {{ d.phone or 'No phone listed' }}
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;" class="muted">
+                    {{ icon('door', 16) }} Room {{ d.room or 'Unassigned' }}
+                </div>
+            </div>
+        </div>
+        <div style="padding: 15px 20px; background: rgba(0,0,0,0.02); border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+            <div class="stat-value" style="font-size: 14px;">{{ d.patients }} <span style="font-weight:400; color:var(--text-muted)">patients</span></div>
+            <div class="stat-value" style="font-size: 14px; text-align: right;">{{ d.upcoming }} <span style="font-weight:400; color:var(--text-muted)">upcoming appts</span></div>
+        </div>
+    </article>
+    {% else %}
+    <div class="card span-full" style="text-align: center; padding: 40px;">
+        <div class="empty">{{ icon('stethoscope', 32) }}<div>No doctors found.</div></div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block dialogs %}
+<dialog class="modal" id="add-doctor-modal">
+    <form method="POST" action="{{ url_for('admin_doctors') }}">
+        <header class="modal-head">
+            <div><h3>Add new doctor</h3><p class="muted">Add a physician to the {{ hospital }} roster.</p></div>
+            <button type="button" class="icon-btn" data-close aria-label="Close">{{ icon('x', 16) }}</button>
+        </header>
+        <div class="modal-body form-grid">
+            <label class="field span-2"><span>Full Name</span><input type="text" name="name" required placeholder="e.g. Dr. Rajesh Kumar"></label>
+            <label class="field"><span>Specialization</span><input type="text" name="specialization" required></label>
+            <label class="field"><span>Phone number</span><input type="text" name="phone" pattern="[0-9]{10}"></label>
+            <label class="field span-2"><span>Consultation Room</span><input type="text" name="room"></label>
+        </div>
+        <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">{{ icon('check', 16) }} Add doctor</button>
+        </footer>
+    </form>
+</dialog>
+{% endblock %}

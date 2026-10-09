@@ -1,0 +1,106 @@
+{% extends "admin/layout.html" %}
+{% block title %}Billing{% endblock %}
+{% block heading %}Billing & Payments{% endblock %}
+{% block actions %}
+<button type="button" class="btn btn-primary" data-open="add-bill-modal">{{ icon('plus', 16) }} Raise bill</button>
+{% endblock %}
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Total Collected</div>
+        <div class="stat-value text-green">{{ summary.collected|inr }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Pending Dues</div>
+        <div class="stat-value text-amber">{{ summary.pending|inr }}</div>
+        <div class="stat-desc">{{ summary.unpaid }} unpaid bill{{ 's' if summary.unpaid != 1 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Total Bills</div>
+        <div class="stat-value">{{ summary.bills }}</div>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="tabs">
+        <a href="{{ url_for('admin_billing', status='all') }}" class="tab {% if status == 'all' %}active{% endif %}">All bills</a>
+        <a href="{{ url_for('admin_billing', status='Unpaid') }}" class="tab {% if status == 'Unpaid' %}active{% endif %}">Unpaid <span class="badge">{{ summary.unpaid }}</span></a>
+        <a href="{{ url_for('admin_billing', status='Paid') }}" class="tab {% if status == 'Paid' %}active{% endif %}">Paid</a>
+    </div>
+    <a href="{{ url_for('admin_export', kind='billing') }}" class="btn btn-ghost">{{ icon('download', 16) }} Export CSV</a>
+</div>
+
+<article class="card">
+    <div class="table-wrap">
+        <table class="data">
+            <thead>
+                <tr><th>Bill No.</th><th>Date</th><th>Patient</th><th>Treatment</th><th class="num">Amount</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for b in bills %}
+                <tr>
+                    <td><b>#{{ b.bill_id }}</b></td>
+                    <td>{{ b.bill_date|fdate }}</td>
+                    <td>
+                        <div><b><a href="{{ url_for('admin_patient_detail', patient_id=b.patient_id) }}" class="link">{{ b.patient_name }}</a></b></div>
+                        <small>{{ b.patient_id }}</small>
+                    </td>
+                    <td>{{ b.treatment or 'Consultation' }}</td>
+                    <td class="num"><b>{{ b.total_amount|inr }}</b></td>
+                    <td>
+                        {% if b.status == 'Paid' %}
+                            <span class="pill pill-green">Paid</span>
+                        {% else %}
+                            <span class="pill pill-amber">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            {% if b.status == 'Unpaid' %}
+                            <form method="POST" action="{{ url_for('admin_mark_paid', bill_id=b.bill_id) }}">
+                                <button class="btn btn-sm btn-ghost" type="submit">Mark paid</button>
+                            </form>
+                            {% else %}
+                            <a class="icon-btn" href="{{ url_for('download_receipt', bill_id=b.bill_id) }}" title="Download receipt" download>{{ icon('receipt', 16) }}</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7"><div class="empty">{{ icon('receipt', 32) }}<div>No billing records found.</div></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block dialogs %}
+<dialog class="modal" id="add-bill-modal">
+    <form method="POST" action="{{ url_for('admin_billing') }}">
+        <header class="modal-head">
+            <div><h3>Raise new bill</h3><p class="muted">Record charges for a patient's visit or treatment.</p></div>
+            <button type="button" class="icon-btn" data-close aria-label="Close">{{ icon('x', 16) }}</button>
+        </header>
+        <div class="modal-body form-grid">
+            <label class="field span-2"><span>Patient</span>
+                <select name="patient_id" required>
+                    <option value="">Select patient...</option>
+                    {% for p in patients %}<option value="{{ p.patient_id }}">{{ p.patient_id }} - {{ p.name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label class="field span-2"><span>Treatment details</span><input type="text" name="treatment" required></label>
+            
+            <div class="form-section">Charges breakdown</div>
+            <label class="field"><span>Consultation fee (₹)</span><input type="number" name="consultation_fee" min="0" step="0.01" value="500"></label>
+            <label class="field"><span>Treatment cost (₹)</span><input type="number" name="treatment_cost" min="0" step="0.01"></label>
+            <label class="field"><span>Medicine charges (₹)</span><input type="number" name="medicine_charges" min="0" step="0.01"></label>
+            <label class="field"><span>Room charges (₹)</span><input type="number" name="room_charges" min="0" step="0.01"></label>
+        </div>
+        <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">{{ icon('check', 16) }} Generate bill</button>
+        </footer>
+    </form>
+</dialog>
+{% endblock %}

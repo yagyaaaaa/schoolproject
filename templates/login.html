@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block body %}
+<main class="auth">
+    <section class="auth-brand">
+        <div class="brand">
+            <span class="brand-logo">{{ icon('cross', 20) }}</span>
+            <span><strong>{{ hospital }}</strong></span>
+        </div>
+
+        <div class="auth-hero">
+            <h1>{{ hospital }} Management System</h1>
+            <p>Patient records, doctor appointments and billing, managed from one secure portal.</p>
+            <ul class="auth-points">
+                <li><span class="icon-wrap">{{ icon('users', 17) }}</span> Centralised patient records with unique IDs
+                </li>
+                <li><span class="icon-wrap">{{ icon('calendar', 17) }}</span> Past and upcoming appointment tracking
+                </li>
+                <li><span class="icon-wrap">{{ icon('receipt', 17) }}</span> Itemised billing with downloadable receipts
+                </li>
+            </ul>
+            <svg class="ecg" viewBox="0 0 600 90" preserveAspectRatio="none" aria-hidden="true">
+                <path
+                    d="M0 50 H120 L135 50 L148 22 L160 78 L172 10 L186 66 L198 50 H330 L345 50 L358 22 L370 78 L382 10 L396 66 L408 50 H600" />
+            </svg>
+        </div>
+
+        <div class="auth-foot">© {{ today.year }} {{ hospital }} · Mumbai</div>
+    </section>
+
+    <section class="auth-form-wrap">
+        <form class="auth-card" method="POST" action="{{ url_for('login') }}" id="login-form">
+            <h2>Welcome back</h2>
+            <p class="muted">Select your portal and sign in to continue.</p>
+
+            <div class="role-switch" data-role-switch>
+                <input type="radio" name="role" id="role-admin" value="admin" {% if role !='patient' %}checked{% endif
+                    %}>
+                <label for="role-admin">{{ icon('shield', 16) }} Administrator</label>
+                <input type="radio" name="role" id="role-patient" value="patient" {% if role=='patient' %}checked{%
+                    endif %}>
+                <label for="role-patient">{{ icon('user', 16) }} Patient</label>
+                <span class="role-indicator"></span>
+            </div>
+
+            <label class="field">
+                <span data-username-label>Username</span>
+                <div class="input-icon">
+                    {{ icon('user', 16) }}
+                    <input type="text" id="username" name="username" value="{{ username }}" autocomplete="username"
+                        required>
+                </div>
+            </label>
+
+            <label class="field">
+                <span>Password</span>
+                <div class="input-icon">
+                    {{ icon('lock', 16) }}
+                    <input type="password" id="password" name="password" placeholder="Enter password"
+                        autocomplete="current-password" required>
+                    <button type="button" class="toggle-pass" data-toggle-pass aria-label="Show password">{{ icon('eye',
+                        16) }}</button>
+                </div>
+            </label>
+
+            <button type="submit" class="btn btn-primary btn-block" id="login-submit">Sign in {{ icon('arrow-right', 16)
+                }}</button>
+
+            <div class="demo-creds">
+                <div>Administrator: <b>admin</b> / <b>admin123</b></div>
+                <div>Patient: <b>PAT-1001</b> / <b>patient123</b></div>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "admin/layout.html" %}
+{% block title %}Appointments{% endblock %}
+{% block heading %}Appointments{% endblock %}
+{% block actions %}
+<button type="button" class="btn btn-primary" data-open="add-appt-modal" id="open-add-appt">{{ icon('plus', 16) }} Schedule appointment</button>
+{% endblock %}
+{% block content %}
+<div class="toolbar">
+    <div class="tabs">
+        <a href="{{ url_for('admin_appointments', view='upcoming') }}" class="tab {% if view == 'upcoming' %}active{% endif %}">Upcoming <span class="badge">{{ counts.upcoming }}</span></a>
+        <a href="{{ url_for('admin_appointments', view='past') }}" class="tab {% if view == 'past' %}active{% endif %}">Past <span class="badge">{{ counts.past }}</span></a>
+        <a href="{{ url_for('admin_appointments', view='all') }}" class="tab {% if view == 'all' %}active{% endif %}">All <span class="badge">{{ counts.all_count }}</span></a>
+    </div>
+</div>
+
+<article class="card">
+    <div class="card-head">
+        <div><h3>{{ icon('calendar', 18) }} {% if view == 'upcoming' %}Upcoming{% elif view == 'past' %}Past{% else %}All{% endif %} appointments</h3></div>
+    </div>
+    <div class="table-wrap">
+        <table class="data">
+            <thead>
+                <tr><th>Date & Time</th><th>Patient</th><th>Doctor</th><th>Purpose</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for a in appointments %}
+                <tr {% if a.status == 'Cancelled' %}class="muted"{% endif %}>
+                    <td>
+                        <div><b>{{ a.appt_date|fdate }}</b></div>
+                        <div>{{ a.appt_time|ftime }}</div>
+                    </td>
+                    <td>
+                        <div><b><a href="{{ url_for('admin_patient_detail', patient_id=a.patient_id) }}" class="link">{{ a.patient_name }}</a></b></div>
+                        <small>{{ a.patient_id }} · {{ a.patient_phone }}</small>
+                    </td>
+                    <td>
+                        {% if a.doctor_name %}
+                        <div><b>{{ a.doctor_name }}</b></div>
+                        <small>{{ a.specialization }}</small>
+                        {% else %}
+                        <span class="muted">Any available</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.purpose or '—' }}</td>
+                    <td>
+                        {% if a.status == 'Scheduled' %}
+                            <span class="pill pill-blue">Scheduled</span>
+                        {% elif a.status == 'Completed' %}
+                            <span class="pill pill-green">Completed</span>
+                        {% else %}
+                            <span class="pill pill-gray">Cancelled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.status == 'Scheduled' and a.appt_date >= today %}
+                        <div class="row-actions">
+                            <form method="POST" action="{{ url_for('admin_update_appointment', appointment_id=a.appointment_id, action='complete') }}">
+                                <button type="submit" class="icon-btn" title="Mark complete">{{ icon('check', 16) }}</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_update_appointment', appointment_id=a.appointment_id, action='cancel') }}" data-confirm="Cancel this appointment?">
+                                <button type="submit" class="icon-btn danger" title="Cancel">{{ icon('x', 16) }}</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6"><div class="empty">{{ icon('calendar', 32) }}<div>No appointments found.</div></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block dialogs %}
+<dialog class="modal" id="add-appt-modal">
+    <form method="POST" action="{{ url_for('admin_appointments') }}">
+        <header class="modal-head">
+            <div><h3>Schedule appointment</h3><p class="muted">Book a visit for an existing patient.</p></div>
+            <button type="button" class="icon-btn" data-close aria-label="Close">{{ icon('x', 16) }}</button>
+        </header>
+        <div class="modal-body form-grid">
+            <label class="field span-2"><span>Patient</span>
+                <select name="patient_id" required>
+                    <option value="">Select patient...</option>
+                    {% for p in patients %}<option value="{{ p.patient_id }}">{{ p.patient_id }} - {{ p.name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label class="field span-2"><span>Doctor</span>
+                <select name="doctor_id">
+                    <option value="">Any available</option>
+                    {% for d in doctors %}<option value="{{ d.doctor_id }}">{{ d.name }} ({{ d.specialization }})</option>{% endfor %}
+                </select>
+            </label>
+            <label class="field"><span>Date</span><input type="date" name="appt_date" required min="{{ today.isoformat() }}"></label>
+            <label class="field"><span>Time</span><input type="time" name="appt_time" required></label>
+            <label class="field span-2"><span>Purpose / Notes</span><input type="text" name="purpose" maxlength="255"></label>
+        </div>
+        <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">{{ icon('check', 16) }} Schedule</button>
+        </footer>
+    </form>
+</dialog>
+{% endblock %}

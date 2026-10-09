@@ -1,0 +1,156 @@
+{% extends "admin/layout.html" %}
+{% block title %}{{ patient.name }} - Patient Record{% endblock %}
+{% block heading %}
+<div style="display:flex; align-items:center; gap: 10px;">
+    <a href="{{ url_for('admin_patients') }}" class="icon-btn">{{ icon('arrow-left', 20) }}</a>
+    Patient Record
+</div>
+{% endblock %}
+{% block content %}
+<div class="grid">
+    <div style="grid-column: span 8;">
+        <article class="card">
+            <div class="card-head">
+                <div class="person">
+                    <span class="avatar c{{ patient.name|length % 6 }}">{{ patient.name|initials }}</span>
+                    <div>
+                        <h2>{{ patient.name }}</h2>
+                        <div class="muted">{{ patient.patient_id }}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-ghost" data-open="edit-patient-modal">{{ icon('edit', 16) }} Edit</button>
+            </div>
+            <div style="padding: 0 20px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p class="muted">Demographics</p>
+                    <p><b>{{ patient.age or '—' }} yrs · {{ patient.gender or '—' }}</b></p>
+                    <p>{{ patient.phone }}</p>
+                    <p>Admitted on {{ patient.admitted_on|fdate }}</p>
+                </div>
+                <div>
+                    <p class="muted">Medical condition</p>
+                    <p><b>{{ patient.condition_desc or 'Not specified' }}</b></p>
+                    <p class="muted" style="margin-top: 10px;">Allotted doctor</p>
+                    <p>
+                        {% if patient.doctor_name %}
+                            <b>{{ patient.doctor_name }}</b> ({{ patient.specialization }})<br>
+                            {{ patient.doctor_phone }}
+                        {% else %}
+                            <span class="muted">Not assigned</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <h3 style="margin: 30px 0 15px;">Appointments</h3>
+        <article class="card">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                        <tr><th>Date & Time</th><th>Doctor</th><th>Purpose</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for a in appointments %}
+                        <tr>
+                            <td><b>{{ a.appt_date|fdate }}</b><br><small>{{ a.appt_time|ftime }}</small></td>
+                            <td>{{ a.doctor_name or 'Any available' }}</td>
+                            <td>{{ a.purpose or '—' }}</td>
+                            <td>
+                                {% if a.status == 'Scheduled' %}
+                                    <span class="pill pill-blue">Scheduled</span>
+                                {% elif a.status == 'Completed' %}
+                                    <span class="pill pill-green">Completed</span>
+                                {% else %}
+                                    <span class="pill pill-gray">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4"><div class="empty">No appointments booked.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <h3 style="margin: 30px 0 15px;">Billing History</h3>
+        <article class="card">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                        <tr><th>Bill No.</th><th>Date</th><th>Treatment</th><th class="num">Amount</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bills %}
+                        <tr>
+                            <td>#{{ b.bill_id }}</td>
+                            <td>{{ b.bill_date|fdate }}</td>
+                            <td>{{ b.treatment or 'Consultation' }}</td>
+                            <td class="num"><b>{{ b.total_amount|inr }}</b></td>
+                            <td>
+                                {% if b.status == 'Paid' %}
+                                    <span class="pill pill-green">Paid</span>
+                                {% else %}
+                                    <span class="pill pill-amber">Unpaid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5"><div class="empty">No bills raised.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </div>
+
+    <div style="grid-column: span 4; display: flex; flex-direction: column; gap: 20px;">
+        <article class="card">
+            <div class="card-head"><h3>Account Summary</h3></div>
+            <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span class="muted">Total Billed</span>
+                    <span>{{ totals.billed|inr }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span class="muted">Amount Paid</span>
+                    <span class="text-green">{{ totals.paid|inr }}</span>
+                </div>
+                <hr style="border:0; border-top: 1px solid var(--border); margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 600;">
+                    <span>Pending Due</span>
+                    <span class="text-amber">{{ totals.due|inr }}</span>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+{% endblock %}
+
+{% block dialogs %}
+<dialog class="modal" id="edit-patient-modal">
+    <form method="POST" action="{{ url_for('admin_patient_detail', patient_id=patient.patient_id) }}">
+        <header class="modal-head">
+            <div><h3>Update record: {{ patient.name }}</h3></div>
+            <button type="button" class="icon-btn" data-close aria-label="Close">{{ icon('x', 16) }}</button>
+        </header>
+        <div class="modal-body form-grid">
+            <label class="field span-2"><span>Medical condition</span><input name="condition" value="{{ patient.condition_desc or '' }}" maxlength="255"></label>
+            <label class="field span-2"><span>Phone number</span><input name="phone" value="{{ patient.phone }}" pattern="[0-9]{10}" required></label>
+            <label class="field span-2"><span>Allotted doctor</span>
+                <select name="doctor_id">
+                    <option value="">Not assigned</option>
+                    {% for d in doctors %}
+                    <option value="{{ d.doctor_id }}" {% if patient.doctor_id == d.doctor_id %}selected{% endif %}>{{ d.name }} · {{ d.specialization }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+        <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">{{ icon('check', 16) }} Save changes</button>
+        </footer>
+    </form>
+</dialog>
+{% endblock %}

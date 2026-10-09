@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-logo">{{ icon('cross', 18) }}</span>
+            <span>{{ hospital }}<small>Administration Console</small></span>
+        </div>
+
+        <nav>
+            <span class="nav-label">Main</span>
+            {% set links = [
+                ('overview', 'admin_overview', 'grid', 'Overview'),
+                ('patients', 'admin_patients', 'users', 'Patients'),
+                ('appointments', 'admin_appointments', 'calendar', 'Appointments'),
+                ('billing', 'admin_billing', 'receipt', 'Billing'),
+                ('doctors', 'admin_doctors', 'stethoscope', 'Doctors')
+            ] %}
+            {% for key, endpoint, glyph, label in links %}
+            <a href="{{ url_for(endpoint) }}" id="nav-{{ key }}" class="nav-link {% if active == key %}active{% endif %}">
+                {{ icon(glyph) }}<span>{{ label }}</span>
+            </a>
+            {% endfor %}
+            <span class="nav-label">System</span>
+            <a href="{{ url_for('admin_records') }}" id="nav-records" class="nav-link {% if active == 'records' %}active{% endif %}">
+                {{ icon('folder') }}<span>Records &amp; Files</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <span class="avatar c4">AD</span>
+            <div class="who"><b>{{ session['username']|capitalize }}</b><span>Administrator</span></div>
+            <a href="{{ url_for('logout') }}" id="logout-link" title="Sign out">{{ icon('logout', 17) }}</a>
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow" data-greeting data-name="Admin">Welcome</p>
+                <h1 class="page-title">{% block heading %}{% endblock %}</h1>
+            </div>
+            <div class="topbar-right">
+                <div class="clock"><span class="live-dot"></span><span data-clock></span></div>
+                {% block actions %}{% endblock %}
+            </div>
+        </header>
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% block dialogs %}{% endblock %}
+{% endblock %}

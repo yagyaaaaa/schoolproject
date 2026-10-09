@@ -1,0 +1,125 @@
+{% extends "admin/layout.html" %}
+{% block title %}Overview{% endblock %}
+{% block heading %}{{ hospital }} Overview{% endblock %}
+{% block actions %}
+<a href="{{ url_for('admin_patients') }}" class="btn btn-primary" id="quick-register">{{ icon('plus', 16) }} New patient</a>
+{% endblock %}
+{% block content %}
+<section class="stats">
+    <article class="card stat tone-blue">
+        <div class="stat-top"><span class="stat-label">Registered patients</span><span class="stat-icon">{{ icon('users', 20) }}</span></div>
+        <div class="stat-value" data-count="{{ stats.patients }}">{{ stats.patients }}</div>
+        <div class="stat-sub">Across {{ stats.doctors }} doctors on staff</div>
+    </article>
+    <article class="card stat tone-teal">
+        <div class="stat-top"><span class="stat-label">Upcoming appointments</span><span class="stat-icon">{{ icon('calendar', 20) }}</span></div>
+        <div class="stat-value" data-count="{{ stats.upcoming }}">{{ stats.upcoming }}</div>
+        <div class="stat-sub">{{ stats.today }} scheduled for today</div>
+    </article>
+    <article class="card stat tone-green">
+        <div class="stat-top"><span class="stat-label">Revenue collected</span><span class="stat-icon">{{ icon('rupee', 20) }}</span></div>
+        <div class="stat-value">{{ stats.collected|inr }}</div>
+        <div class="stat-sub">{{ stats.collection_rate }}% of total billing</div>
+    </article>
+    <article class="card stat tone-amber">
+        <div class="stat-top"><span class="stat-label">Pending dues</span><span class="stat-icon">{{ icon('wallet', 20) }}</span></div>
+        <div class="stat-value">{{ stats.pending|inr }}</div>
+        <div class="stat-sub">{{ stats.unpaid_bills }} unpaid bill{{ 's' if stats.unpaid_bills != 1 }}</div>
+    </article>
+</section>
+
+<section class="grid-2-1">
+    <article class="card">
+        <div class="card-head">
+            <div><h3>{{ icon('calendar', 18) }} Upcoming appointments</h3><p>Next scheduled consultations</p></div>
+            <a class="card-link" href="{{ url_for('admin_appointments') }}">View all {{ icon('arrow-right', 14) }}</a>
+        </div>
+        {% if upcoming %}
+        <ul class="appt-list">
+            {% for a in upcoming %}
+            <li class="appt-item">
+                <div class="date-badge {% if a.appt_date == today %}today{% endif %}">
+                    <span>{{ 'Today' if a.appt_date == today else a.appt_date|fdate('%b') }}</span>
+                    <b>{{ a.appt_date|fdate('%d') }}</b>
+                </div>
+                <div class="appt-main">
+                    <b>{{ a.patient_name }} <span class="tag">{{ a.patient_id }}</span></b>
+                    <small>{{ a.purpose or 'Consultation' }} · {{ a.doctor_name or 'Unassigned' }}</small>
+                </div>
+                <div class="appt-time">{{ a.appt_time|ftime }}<small>{{ a.specialization or '' }}</small></div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty">{{ icon('calendar', 32) }}<div>No upcoming appointments.</div></div>
+        {% endif %}
+    </article>
+
+    <div style="display:grid; gap:22px; align-content:start;">
+        <article class="card">
+            <div class="card-head"><div><h3>{{ icon('activity', 18) }} Collection rate</h3><p>Paid versus total billed</p></div></div>
+            <div class="card-body ring-wrap">
+                <div class="ring" data-ring="{{ stats.collection_rate }}"><b>0%</b></div>
+                <div class="ring-legend">
+                    <div><span><i style="background:var(--teal)"></i>Collected</span><b>{{ stats.collected|inr }}</b></div>
+                    <div><span><i style="background:#e7edf4"></i>Outstanding</span><b>{{ stats.pending|inr }}</b></div>
+                </div>
+            </div>
+        </article>
+        <article class="card">
+            <div class="card-head"><div><h3>{{ icon('stethoscope', 18) }} Doctor workload</h3><p>Patients allotted per doctor</p></div></div>
+            <div class="card-body bars">
+                {% for d in workload %}
+                <div class="bar-row">
+                    <div class="bar-label"><b>{{ d.name }}</b><span>{{ d.patients }} patient{{ 's' if d.patients != 1 }}</span></div>
+                    <div class="bar-track"><div class="bar-fill" data-width="{{ (d.patients / peak * 100)|round|int }}"></div></div>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="grid-2-1">
+    <article class="card">
+        <div class="card-head">
+            <div><h3>{{ icon('receipt', 18) }} Recent bills</h3><p>Latest billing entries</p></div>
+            <a class="card-link" href="{{ url_for('admin_billing') }}">Open billing {{ icon('arrow-right', 14) }}</a>
+        </div>
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Bill</th><th>Patient</th><th>Treatment</th><th class="num">Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for b in recent_bills %}
+                    <tr>
+                        <td class="mono">#{{ b.bill_id }}</td>
+                        <td><b>{{ b.patient_name }}</b><br><small class="muted">{{ b.patient_id }}</small></td>
+                        <td>{{ b.treatment }}</td>
+                        <td class="num"><b>{{ b.total_amount|inr }}</b></td>
+                        <td><span class="pill {{ 'pill-green' if b.status == 'Paid' else 'pill-amber' }}">{{ b.status }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="empty">No bills raised yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="card">
+        <div class="card-head">
+            <div><h3>{{ icon('file', 18) }} Recent activity</h3><p>Read from activity_log.txt</p></div>
+            <a class="card-link" href="{{ url_for('admin_records') }}">Full log {{ icon('arrow-right', 14) }}</a>
+        </div>
+        {% if activity %}
+        <ul class="activity">
+            {% for entry in activity %}
+            <li><b>{{ entry.message }}</b><small>{{ entry.user }} · {{ entry.time }}</small></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty">No activity recorded yet.</div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

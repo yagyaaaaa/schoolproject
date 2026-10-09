@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Patient Portal{% endblock %}
+
+{% block body %}
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-logo">{{ icon('cross', 18) }}</span>
+            <span>{{ hospital }}<small>Patient Portal</small></span>
+        </div>
+        <nav>
+            <span class="nav-label">Main</span>
+            <a href="{{ url_for('patient_dashboard') }}" class="nav-link active">
+                {{ icon('grid') }}<span>Dashboard</span>
+            </a>
+        </nav>
+        <div class="sidebar-foot">
+            <span class="avatar c{{ session['username']|length % 6 }}">{{ session['username'][:2]|upper }}</span>
+            <div class="who"><b>{{ patient.name }}</b><span>{{ patient.patient_id }}</span></div>
+            <a href="{{ url_for('logout') }}" id="logout-link" title="Sign out">{{ icon('logout', 17) }}</a>
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow" data-greeting data-name="{{ patient.name.split()[0] }}">Welcome</p>
+                <h1 class="page-title">My Health Dashboard</h1>
+            </div>
+            <div class="topbar-right">
+                <div class="clock"><span class="live-dot"></span><span data-clock></span></div>
+            </div>
+        </header>
+        <main class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Patient ID</div>
+                    <div class="stat-value">{{ patient.patient_id }}</div>
+                    <div class="stat-desc">Registered since {{ patient.admitted_on|fdate }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Medical Condition</div>
+                    <div class="stat-value" style="font-size: 20px;">{{ patient.condition_desc or 'Not specified' }}</div>
+                    <div class="stat-desc">Age: {{ patient.age or '—' }} · {{ patient.gender or '—' }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Your Doctor</div>
+                    <div class="stat-value" style="font-size: 20px;">
+                        {% if patient.doctor_name %}{{ patient.doctor_name }}{% else %}<span class="muted">Not assigned</span>{% endif %}
+                    </div>
+                    <div class="stat-desc">
+                        {% if patient.specialization %}{{ patient.specialization }}{% if patient.room %} (Room {{ patient.room }}){% endif %}{% else %}—{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 25px;">
+                <article class="card">
+                    <div class="card-head">
+                        <div><h3>{{ icon('calendar', 18) }} Upcoming Appointments</h3></div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data">
+                            <tbody>
+                                {% for a in upcoming %}
+                                <tr>
+                                    <td><b>{{ a.appt_date|fdate }}</b><br><small>{{ a.appt_time|ftime }}</small></td>
+                                    <td>{{ a.doctor_name or 'Any available' }}<br><small class="muted">{{ a.specialization }} {% if a.room %}(Room {{ a.room }}){% endif %}</small></td>
+                                    <td>{{ a.purpose or 'Routine checkup' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td><div class="empty">No upcoming appointments.</div></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="card-head">
+                        <div><h3>{{ icon('receipt', 18) }} Dues & Payments</h3></div>
+                    </div>
+                    {% if due > 0 %}
+                    <div style="padding: 15px 20px; background: rgba(255, 152, 0, 0.1); border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 class="text-amber" style="margin:0 0 5px;">Total pending dues</h3>
+                                <div style="font-size: 24px; font-weight: 700;">{{ due|inr }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="table-wrap">
+                        <table class="data">
+                            <tbody>
+                                {% for b in bills %}
+                                <tr>
+                                    <td><b>#{{ b.bill_id }}</b><br><small>{{ b.bill_date|fdate }}</small></td>
+                                    <td>{{ b.treatment or 'Consultation' }}</td>
+                                    <td class="num"><b>{{ b.total_amount|inr }}</b></td>
+                                    <td>
+                                        {% if b.status == 'Paid' %}
+                                            <a class="btn btn-sm btn-ghost" href="{{ url_for('download_receipt', bill_id=b.bill_id) }}" download>Receipt</a>
+                                        {% else %}
+                                            <form method="POST" action="{{ url_for('patient_pay', bill_id=b.bill_id) }}">
+                                                <button class="btn btn-sm btn-primary" type="submit">Pay Now</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td><div class="empty">No billing history found.</div></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </div>
+            
+            {% if history %}
+            <article class="card" style="margin-top: 25px;">
+                <div class="card-head">
+                    <div><h3>{{ icon('clock', 18) }} Past Appointments</h3></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead>
+                            <tr><th>Date & Time</th><th>Doctor</th><th>Purpose</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for a in history %}
+                            <tr {% if a.status == 'Cancelled' %}class="muted"{% endif %}>
+                                <td><b>{{ a.appt_date|fdate }}</b><br><small>{{ a.appt_time|ftime }}</small></td>
+                                <td>{{ a.doctor_name or 'Any available' }}</td>
+                                <td>{{ a.purpose or 'Routine checkup' }}</td>
+                                <td>
+                                    {% if a.status == 'Completed' %}
+                                        <span class="pill pill-green">Completed</span>
+                                    {% else %}
+                                        <span class="pill pill-gray">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

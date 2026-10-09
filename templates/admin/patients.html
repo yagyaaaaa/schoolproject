@@ -1,0 +1,91 @@
+{% extends "admin/layout.html" %}
+{% block title %}Patients{% endblock %}
+{% block heading %}Patients{% endblock %}
+{% block actions %}
+<button type="button" class="btn btn-primary" data-open="add-patient-modal" id="open-add-patient">{{ icon('plus', 16) }} Register patient</button>
+{% endblock %}
+{% block content %}
+<div class="toolbar">
+    <form class="search" method="GET" action="{{ url_for('admin_patients') }}">
+        {{ icon('search', 16) }}
+        <input class="input" type="search" name="q" id="patient-search" value="{{ search }}" placeholder="Search by ID, name, phone or condition">
+    </form>
+    <div style="display:flex; gap:10px;">
+        {% if search %}<a href="{{ url_for('admin_patients') }}" class="btn btn-ghost">Clear search</a>{% endif %}
+        <a href="{{ url_for('admin_export', kind='patients') }}" class="btn btn-ghost" id="export-patients">{{ icon('download', 16) }} Export CSV</a>
+    </div>
+</div>
+
+<article class="card">
+    <div class="card-head">
+        <div><h3>{{ icon('users', 18) }} Patient register</h3><p>{{ patients|length }} record{{ 's' if patients|length != 1 }}{% if search %} matching “{{ search }}”{% endif %}</p></div>
+    </div>
+    <div class="table-wrap">
+        <table class="data">
+            <thead>
+                <tr><th>Patient</th><th>Patient ID</th><th>Phone</th><th>Condition</th><th>Allotted doctor</th><th class="num">Dues</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td>
+                        <div class="person">
+                            <span class="avatar c{{ p.name|length % 6 }}">{{ p.name|initials }}</span>
+                            <div><b>{{ p.name }}</b><small>{{ p.age or '—' }} yrs · {{ p.gender or '—' }}</small></div>
+                        </div>
+                    </td>
+                    <td><span class="tag">{{ p.patient_id }}</span></td>
+                    <td>{{ p.phone }}</td>
+                    <td>{{ p.condition_desc or '—' }}</td>
+                    <td>{% if p.doctor_name %}<b>{{ p.doctor_name }}</b><br><small class="muted">{{ p.specialization }}</small>{% else %}<span class="muted">Not assigned</span>{% endif %}</td>
+                    <td class="num">{% if p.dues > 0 %}<span class="pill pill-amber">{{ p.dues|inr }}</span>{% else %}<span class="pill pill-green">Clear</span>{% endif %}</td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="icon-btn" href="{{ url_for('admin_patient_detail', patient_id=p.patient_id) }}" title="View record" id="view-{{ p.patient_id }}">{{ icon('eye', 16) }}</a>
+                            <form method="POST" action="{{ url_for('admin_delete_patient', patient_id=p.patient_id) }}" data-confirm="Delete {{ p.name }} ({{ p.patient_id }}) and all related appointments and bills?">
+                                <button class="icon-btn danger" type="submit" title="Delete" id="delete-{{ p.patient_id }}">{{ icon('trash', 16) }}</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7"><div class="empty">{{ icon('users', 32) }}<div>No patients found.</div></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block dialogs %}
+<dialog class="modal" id="add-patient-modal">
+    <form method="POST" action="{{ url_for('admin_patients') }}" id="add-patient-form">
+        <header class="modal-head">
+            <div><h3>Register new patient</h3><p class="muted">A unique Patient ID is generated automatically and used for login.</p></div>
+            <button type="button" class="icon-btn" data-close aria-label="Close">{{ icon('x', 16) }}</button>
+        </header>
+        <div class="modal-body form-grid">
+            <label class="field span-2"><span>Full name</span><input name="name" id="p-name" required maxlength="100"></label>
+            <label class="field"><span>Age</span><input type="number" name="age" id="p-age" min="0" max="120" required></label>
+            <label class="field"><span>Gender</span>
+                <select name="gender" id="p-gender" required><option>Male</option><option>Female</option><option>Other</option></select>
+            </label>
+            <label class="field"><span>Phone number</span><input name="phone" id="p-phone" pattern="[0-9]{10}" title="10 digit mobile number" required></label>
+            <label class="field"><span>Admitted on</span><input type="date" name="admitted_on" id="p-admitted" value="{{ today.isoformat() }}"></label>
+            <label class="field span-2"><span>Medical condition</span><input name="condition" id="p-condition" maxlength="255" placeholder="e.g. Hypertension"></label>
+            <label class="field span-2"><span>Allotted doctor</span>
+                <select name="doctor_id" id="p-doctor">
+                    <option value="">Not assigned</option>
+                    {% for d in doctors %}<option value="{{ d.doctor_id }}">{{ d.name }} · {{ d.specialization }}</option>{% endfor %}
+                </select>
+            </label>
+            <div class="form-section">Patient portal access</div>
+            <label class="field span-2"><span>Login password <small>(patient signs in with their Patient ID)</small></span><input type="text" name="password" id="p-password" minlength="6" required value="patient123"></label>
+        </div>
+        <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submit-add-patient">{{ icon('check', 16) }} Register patient</button>
+        </footer>
+    </form>
+</dialog>
+{% endblock %}
