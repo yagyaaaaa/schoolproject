@@ -1,2 +1,2 @@
 # schoolproject
-sp
+schoolproject
